@@ -23,13 +23,16 @@ constant and $n \geq 2$. Rearrange the data as
 $((X_1, Y_1), \ldots, (X_n, Y_n))$ such that $X_1 \leq \ldots \leq X_n$.
 Let $r_i$ be the rank of $Y_i$ such that $Y_j \leq Y_i$.
 $\xi$-coeffcient formula is presented here with $X_i$’s and $Y_i$’s
-having no ties $\xi_n$
+having no ties
 
 $$\xi_n(X,Y) = 1 - \frac{3 \sum^{n-1}_{i = 1}(r_{i+1}-r_i)}{n^2 - 1}$$
 
 tmp
 
 ## Code
+
+<details>
+<summary>Code</summary>
 
 ``` julia
 using Distributions, Plots, DataFrames, MarkdownTables
@@ -51,6 +54,7 @@ X = DataFrames.DataFrame((; x,y,w,yhat,what))
 #first(X,5) |> markdown_table()
 ```
 
+</details>
 tmp
 
 ## Resources
