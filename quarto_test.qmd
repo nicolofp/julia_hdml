@@ -7,7 +7,7 @@ format:
         number-sections: true
         code-fold: true
         embed-resources: true
-        df-print: default
+        df-print: kable
 ---
 
 ## Example 1
