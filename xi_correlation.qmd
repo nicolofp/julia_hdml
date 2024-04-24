@@ -20,6 +20,8 @@ Let $(X, Y)$ be an $i.i.d$ pair of random variables, where $Y$ is not constant a
 
 $$ \xi_n(X,Y) = 1 - \frac{3\sum^{n-1}_{i = 1}|r_{i+1}-r_i|}{n^2 - 1} $$ 
 
+tmp
+
 ## Code
 
 ```{julia}
