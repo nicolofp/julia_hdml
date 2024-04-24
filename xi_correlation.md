@@ -16,7 +16,14 @@ outperforms alternative tests in identifying oscillatory signals.
 Despite these strengths, its only drawback arises in less power compared
 to other independence tests for nonoscillatory signals in small samples.
 
-$$y_i = \alpha + \beta x_i \qquad i = 1,\ldots,N$$
+### Formula
+
+Let $(X, Y)$ be an $i.i.d$ pair of random variables, where $Y$ is not
+constant and $n \geq 2$. Rearrange the data as
+$((X_1, Y_1), \ldots, (X_n, Y_n))$ such that $X_1 \leq \ldots \leq X_n$.
+Let $r_i$ be the rank of $Y_i$, such that $Y_j \leq Y_i$. ξ formula is
+presented here with $X_i$’s and $Y_i$’s having no ties
+$$ \xi_n(X,Y) = 1 - \frac{3\sum^{n-1}_{i = 1}|r_{i+1}-r_i|}{n^2 - 1} $$
 
 <details>
 <summary>Code</summary>
