@@ -12,7 +12,12 @@ format:
 
 ## Example 1
 
+Test function
+
 $$y_i = \alpha + \beta x_i \qquad i = 1,\ldots,N$$
+
+
+## Code 
 
 ```{julia}
 using Distributions, Plots, DataFrames, MarkdownTables
@@ -31,6 +36,6 @@ q2 = plot!(x,w, mc = :orange)
 plot(q1, q2, layout=(1,2), size=(750,300))=#
 
 X = DataFrames.DataFrame((; x,y,w,yhat,what))
-first(X,5) |> markdown_table()
+#first(X,5) |> markdown_table()
 ```
 
