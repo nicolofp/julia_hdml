@@ -2,7 +2,7 @@
 ================
 Nicoló Foppa Pedretti
 
-### Introduction
+## Introduction
 
 ξ, a relatively novel correlation coefficient, surpasses classical
 measures in detecting associations that lack monotonicity. Derived from
@@ -16,7 +16,7 @@ outperforms alternative tests in identifying oscillatory signals.
 Despite these strengths, its only drawback arises in less power compared
 to other independence tests for nonoscillatory signals in small samples.
 
-### Formula
+## Formula
 
 Let $(X, Y)$ be an $i.i.d$ pair of random variables, where $Y$ is not
 constant and $n \geq 2$. Rearrange the data as
@@ -49,7 +49,7 @@ X = DataFrames.DataFrame((; x,y,w,yhat,what))
 ```
 
 </details>
-### Resources
+## Resources
 
 - https://arxiv.org/pdf/1909.10140
 - https://souravchatterjee.su.domains/beam-correlation-trans.pdf
