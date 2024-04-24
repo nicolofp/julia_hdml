@@ -7,6 +7,7 @@ format:
         number-sections: true
         code-fold: true
         embed-resources: true
+        df-print: default
 ---
 
 ## Example 1
@@ -14,7 +15,7 @@ format:
 $$y_i = \alpha + \beta x_i \qquad i = 1,\ldots,N$$
 
 ```{julia}
-using Distributions, Plots, DataFrames
+using Distributions, Plots, DataFrames, MarkdownTables
 
 N = 500
 x = sort(rand(Uniform(-5.0,5.0),N))
@@ -30,6 +31,6 @@ q2 = plot!(x,w, mc = :orange)
 plot(q1, q2, layout=(1,2), size=(750,300))=#
 
 X = DataFrames.DataFrame((; x,y,w,yhat,what))
-first(X)
+first(X,5) |> markdown_table()
 ```
 
