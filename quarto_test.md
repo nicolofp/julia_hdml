@@ -10,7 +10,7 @@ $$y_i = \alpha + \beta x_i \qquad i = 1,\ldots,N$$
 
 $$ \xi_n(X,Y) = 1 - y_w $$
 
-$$ \xi_n(X,Y) = \frac{3\sum^{n-1}_{i = 1}|r_{i+1}-r_i|}{n^2 - 1} $$
+$$\frac{3\sum_{i = 1}^{n-1}|r_{i+1}-r_i|}{n^2 - 1} $$
 
 ## Code
 
