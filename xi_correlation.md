@@ -25,9 +25,18 @@ Let $r_i$ be the rank of $Y_i$ such that $Y_j \leq Y_i$.
 $\xi$-coeffcient formula is presented here with $X_i$’s and $Y_i$’s
 having no ties:
 
-$$ \xi_n(X,Y) = 1 - \frac{3\sum_{i}|r_{i+1}-r_i|}{n^2 - 1} $$
+$$ \xi_n(X,Y) = 1 - \frac{3\sum_{i}|r_{i+1}-r_i|}{n^2 - 1} \qquad i = 1, \dots, n-1$$
 
-tmp
+Hypothesis testing can be conducted without needing to assume anything
+about the underlying distributions. This is facilitated by the use of a
+nonparametric statistic, $\xi$, which relies on the ranks of the data
+rather than their actual values. As the sample size, n, approaches
+infinity and assuming Y is continuous, $\xi$ conforms to a normal
+distribution. Statistical testing using $\xi$ is aimed at assessing the
+null hypothesis, $\mathcal{H}_0$, which states that there is no
+dependence between the variables $X$ and $Y$.
+
+$$\sqrt{n} \xi_n(X,Y) \sim \mathcal{N}\left(0,\frac{2}{5}\right)$$
 
 ## Code
 
@@ -55,8 +64,6 @@ X = DataFrames.DataFrame((; x,y,w,yhat,what))
 ```
 
 </details>
-test
-
 ## Resources
 
 Here the list of useful links:
