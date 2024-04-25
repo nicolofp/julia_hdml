@@ -45,6 +45,7 @@ X = DataFrames.DataFrame((; x,y,w,yhat,what))
 #first(X,5) |> markdown_table()
 ```
 
+description
 
 ## Resources 
 

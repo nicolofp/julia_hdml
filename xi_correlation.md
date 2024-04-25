@@ -64,6 +64,8 @@ X = DataFrames.DataFrame((; x,y,w,yhat,what))
 ```
 
 </details>
+description
+
 ## Resources
 
 Here the list of useful links:
