@@ -18,7 +18,7 @@ $$y_i = \alpha + \beta x_i \qquad i = 1,\ldots,N$$
 
 $$ \xi_n(X,Y) = 1 - y_w $$
 
-$$\frac{3\sum_{i = 1}^{n-1}|r_{i+1}-r_i|}{n^2 - 1} $$
+$$\frac{3 \sum_{i = 1}^{n-1} |r_{i+1}-r_i| }{n^2 - 1} $$
 
 $$\sum_{n=1}^{\infty} 2^{-n} = 1$$
 
