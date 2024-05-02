@@ -36,7 +36,14 @@ distribution. Statistical testing using $\xi$ is aimed at assessing the
 null hypothesis, $\mathcal{H}_0$, which states that there is no
 dependence between the variables $X$ and $Y$.
 
-$$\sqrt{n} \xi_n(X,Y) \sim \mathcal{N}\left(0,\frac{2}{5}\right)$$
+$$\sqrt{n} \xi_n(X,Y) \xrightarrow{n \rightarrow \infty} \mathcal{N}\left(0,\frac{2}{5}\right)$$
+
+In the presence of ties, $\xi_n$ is defined as follows. If there are
+ties among the $X_i$’s, then choose an increasing rearrangement as above
+by breaking ties uniformly at random. Let ri be as before, and
+additionally define li to be the number of $j$ such that $Y_j \geq Y_i$:
+
+$$ \xi_n(X,Y) = 1 - \frac{n \sum_{i}|r_{i+1}-r_i|}{2 \sum_{j}l_j(n - l_j)} \quad \substack{i = 1, \dots, n-1 \\ j = 1, \dots, n}$$
 
 ## Code
 
@@ -44,27 +51,44 @@ $$\sqrt{n} \xi_n(X,Y) \sim \mathcal{N}\left(0,\frac{2}{5}\right)$$
 <summary>Code</summary>
 
 ``` julia
-using Distributions, Plots, DataFrames, MarkdownTables
+using Distributions, Plots, DataFrames, StatsBase
 
 N = 500
-x = sort(rand(Uniform(-5.0,5.0),N))
+x = rand(Uniform(-5.0,5.0),N)
 y = -0.4 .+ 2.926 .* x 
-yhat = y + rand(Normal(0.0,1.0),N)
-w = 4.0 .- 0.87 .* x.^2 
-what = w + rand(Normal(0.0,1.0),N)
+w = rand(Uniform(-1.0,1.0),200)
 
-#=q1 = scatter(x,yhat, label = :none, title = "Regression line")
-q1 = plot!(x,y, mc = :orange)
-q2 = scatter(x,what, label = :none, title = "Quadratic line")
-q2 = plot!(x,w, mc = :orange)
-plot(q1, q2, layout=(1,2), size=(750,300))=#
+function xi_corr(x, y, ties = true)
+    
+    n = length(x)
 
-X = DataFrames.DataFrame((; x,y,w,yhat,what))
-#first(X,5) |> markdown_table()
+    if length(y) != n
+        error("x and y don't have the same length")
+    end
+
+    y = y[sortperm(x)]
+    r = ordinalrank(y)
+    num = sum(abs.(diff(r)))
+
+    if ties
+        l = tiedrank(y)
+        den = 2 * sum(l .* (n .- 1))
+        num = n * num
+    else
+        den = n^2 - 1
+        num = 3 * num
+    end
+
+    xi = 1 - num/den
+    return xi
+end
 ```
 
 </details>
-description
+
+    xi_corr (generic function with 2 methods)
+
+Note that the formula with ties can vary based on ranking function use.
 
 ## Resources
 
@@ -74,3 +98,5 @@ Here the list of useful links:
 - https://souravchatterjee.su.domains/beam-correlation-trans.pdf
 - https://www.linkedin.com/pulse/correlation-coefficient-xi-justin-bloesch-zxukc/
 - https://github.com/jlbloesch/miscellaneous/blob/main/xicor.py
+- https://pypi.org/project/xicorpy/
+- https://cran.r-project.org/web/packages/XICOR/XICOR.pdf
