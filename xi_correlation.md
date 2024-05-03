@@ -51,12 +51,7 @@ $$ \xi_n(X,Y) = 1 - \frac{n \sum_{i}|r_{i+1}-r_i|}{2 \sum_{j}l_j(n - l_j)} \quad
 <summary>Code</summary>
 
 ``` julia
-using Distributions, Plots, DataFrames, StatsBase
-
-N = 500
-x = rand(Uniform(-5.0,5.0),N)
-y = -0.4 .+ 2.926 .* x 
-w = rand(Uniform(-1.0,1.0),200)
+using Distributions, StatsBase
 
 function xi_corr(x, y, ties = true)
     
@@ -72,7 +67,7 @@ function xi_corr(x, y, ties = true)
 
     if ties
         l = tiedrank(y)
-        den = 2 * sum(l .* (n .- 1))
+        den = 2 * sum(l .* (n .- l))
         num = n * num
     else
         den = n^2 - 1
@@ -80,7 +75,8 @@ function xi_corr(x, y, ties = true)
     end
 
     xi = 1 - num/den
-    return xi
+    p_val = 1 - cdf(Normal(0.0,2 / 5 / sqrt(n)), xi)
+    return xi, p_val
 end
 ```
 
