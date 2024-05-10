@@ -27,8 +27,6 @@ In the presence of ties, $\xi_n$ is defined as follows. If there are ties among 
 
 $$ \xi_n(X,Y) = 1 - \frac{n \sum_{i}|r_{i+1}-r_i|}{2 \sum_{j}l_j(n - l_j)} \quad \substack{i = 1, \dots, n-1 \\ j = 1, \dots, n}$$
 
-
-
 ## Code
 
 ```{julia}

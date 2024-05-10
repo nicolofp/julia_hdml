@@ -20,8 +20,8 @@ out = ["y1","y2"]
 cov = ["x1","x2","x3","x4","x5"]
 
 function lm_ewas(dt, out, cov)
-    X_tmp = hcat(ones(size(dt,1)), Matrix{Float64}(dt[:,cov]))
-    Y_tmp = Matrix{Float64}(dt[:,out])
+    X_tmp = hcat(ones(size(dt,1)), Matrix{Float32}(dt[:,cov]))
+    Y_tmp = Matrix{Float32}(dt[:,out])
     β = X_tmp\Y_tmp 
     σ = sqrt.(vec(sum((Y_tmp - X_tmp*β).^2,dims = 1)./(size(X_tmp,1)-size(X_tmp,2))))
     Σ = inv(X_tmp'*X_tmp)
@@ -41,5 +41,5 @@ function lm_ewas(dt, out, cov)
     return tmp
 end 
 
-@time results = lm_ewas(dt, ["y1","y2"], ["x1","x2","x3","x4"]);
-
+@time results = lm_ewas(dt, ["y1","y2"], ["x1","x2","x3","x4","x5"]);
+DT = DataFrame(results)
