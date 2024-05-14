@@ -1,4 +1,4 @@
-using JSON, HTTP, DataFrames, CSV
+using JSON, HTTP, DataFrames, CSV, Missings
 
 resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/study_id/ST002089/allfactors/");
 str = String(resp.body);
@@ -15,6 +15,7 @@ for i in 2:length(keys_factor)
 end
 
 DT = permutedims(tmp)
+DT[DT[:,10] .== "-",10] .= "0.0"
 DT = convert(Matrix{Union{AbstractString,Missing}},DT)
 DT[DT .== "NA"] .= missing
 #=for i in 1:length(keys_factor), j in 1:10
@@ -29,10 +30,12 @@ dt_names = ["sample_id","gender","race","smoking_status","center","fev1_post","a
             "age_visit","bmi","pack_years"]
 DT = DataFrames.DataFrame(DT,:auto)
 rename!(DT,dt_names)
+transform!(DT, dt_names[6:10] .=> ByRow(x -> Missings.passmissing(parse).(Float64, x)), 
+           renamecols=false)
 
 # resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/study_id/ST002089/data/");
 # https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN000001/datatable/
-resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003410/mwtab");
+resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003412/mwtab");
 str = String(resp.body);
 jobj = JSON.Parser.parse(str);
 
@@ -43,6 +46,7 @@ allowmissing!(codebook_met)
 for col in eachcol(codebook_met)
     replace!(col, "NA" => missing)
 end
+codebook_met.label = string.("met_",collect(1:size(codebook_met,1)))
 
 data_met = vcat(DataFrame.(jobj["MS_METABOLITE_DATA"]["Data"])...)
 allowmissing!(data_met)
@@ -51,10 +55,15 @@ for col in eachcol(data_met)
 end
 disallowmissing!(data_met,:Metabolite)
 data_met = permutedims(data_met,1126)
+rename!(data_met,vcat("sample",string.("met_",collect(1:size(codebook_met,1)))))
+transform!(data_met, names(data_met[:,2:end]) .=> ByRow(x -> Missings.passmissing(parse).(Float64, x)), 
+           renamecols=false)
 
-# dataset = CSV.read(download("https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003410/datatable/"), DataFrame)
+# Alternative use to download table format
+# url_table = "https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003410/datatable/"
+# dataset = CSV.read(download(url_table), DataFrame)
 
-resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003411/mwtab");
+#=resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003411/mwtab");
 str = String(resp.body);
 jobj = JSON.Parser.parse(str);
 
@@ -72,4 +81,18 @@ for col in eachcol(data_met)
     replace!(col, "NA" => missing, "" => missing)
 end
 disallowmissing!(data_met,:Metabolite)
-data_met = permutedims(data_met,1126)
+data_met = permutedims(data_met,1126) =#
+
+# https://github.com/JuliaStats/NMF.jl --> Non-negative Matrix Factorization
+
+# Check missing data and outliers
+# missing_met = describe(data_met, :nmissing)
+# missing_met[missing_met.nmissing .== 0,:]
+
+#=https://www.dati.lombardia.it/resource/beda-kb7b.csv?$limit=5000000
+url_table = raw"https://www.dati.lombardia.it/resource/beda-kb7b.csv?$limit=5000000"
+dataset = CSV.read(download(url_table), DataFrame)
+
+resp = HTTP.get(raw"https://www.dati.lombardia.it/resource/g2hp-ar79.json?$limit=50000000");
+str = String(resp.body);
+jobj = JSON.Parser.parse(str); =#
