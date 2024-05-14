@@ -32,11 +32,13 @@ In essence, Julia removes the computational bottleneck often encountered with tr
 
 In Julia we can simply compute multiple linear regression at once using the backslash (`\`) operator. This allow the user to optimize the code and the speed of execution. 
 
-$$ \begin{align*} 
-2x - 5y &=  8 \\ 
-3x + 9y &=  -12
-\end{align*}$$
+$$ y_i = \beta_{0,i} + \beta_{1,i}x_1 + \beta_{2,i}x_2 + \beta_{3,i}x_3 + \epsilon$$
 
+Here we have $i = 1, \ldots, N$ where $N$ is the number of outputs. The code reported here below follows the classic definition of the linear regression. The only non-trivial line is related to the *standard error* of the coefficients that change based on the outcome considered. Here to solve the issue we use the *Kronecker product* and the standard error of the coefficients relative to the outcome $i$ is define as follow:
+
+$$sd_i = \sqrt{\sigma \otimes diag(\Sigma)}$$
+
+Here the function ready to use in Julia:
 
 ```{julia}
 function lm_ewas(dt, out, cov)
@@ -62,8 +64,9 @@ function lm_ewas(dt, out, cov)
 end 
 ```
 
-  
 
-Ideas to include everything in 1 script:
+## ToDo
 
-$$\sqrt{\sigma \otimes diag(\Sigma)}$$
++ Implement the variance shrinkage like *limma* R package
++ Optimize the code on the datatype
++ Allow multiple dispatch
