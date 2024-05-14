@@ -62,8 +62,10 @@ In Julia we can simply compute multiple linear regression at once using
 the backslash (`\`) operator. This allow the user to optimize the code
 and the speed of execution.
 
-$$ 2x - 5y =  8 \\
-3x + 9y =  -12 $$
+$$ \begin{align*} 
+2x - 5y &=  8 \\ 
+3x + 9y &=  -12
+\end{align*}$$
 
 <details>
 <summary>Code</summary>
