@@ -96,3 +96,13 @@ dataset = CSV.read(download(url_table), DataFrame)
 resp = HTTP.get(raw"https://www.dati.lombardia.it/resource/g2hp-ar79.json?$limit=50000000");
 str = String(resp.body);
 jobj = JSON.Parser.parse(str); =#
+
+#=url_table = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63087/suppl/GSE63087_normalized_without_technical_replicates.txt.gz"
+download(url_table)=#
+
+
+
+
+
+
+
