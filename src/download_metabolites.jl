@@ -1,4 +1,4 @@
-using JSON, HTTP, DataFrames, CSV, Missings
+using JSON, HTTP, DataFrames, CSV, Missings, JLD2 
 
 resp = HTTP.get("https://www.metabolomicsworkbench.org/rest/study/study_id/ST002089/allfactors/");
 str = String(resp.body);
@@ -58,6 +58,11 @@ data_met = permutedims(data_met,1126)
 rename!(data_met,vcat("sample",string.("met_",collect(1:size(codebook_met,1)))))
 transform!(data_met, names(data_met[:,2:end]) .=> ByRow(x -> Missings.passmissing(parse).(Float64, x)), 
            renamecols=false)
+
+# Save object in julia format 
+# save_object("data/pheno.jld2", DT)
+# save_object("data/codebook.jld2", codebook_met)
+# save_object("data/met.jld2", data_met)
 
 # Alternative use to download table format
 # url_table = "https://www.metabolomicsworkbench.org/rest/study/analysis_id/AN003410/datatable/"
