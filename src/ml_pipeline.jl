@@ -1,4 +1,4 @@
-using Turing, Flux, MLJ
+using Turing, Flux, MLJ, Plots
 using DataFrames, Statistics, LinearAlgebra
 using Distributions, StatsBase, Random
 
@@ -27,10 +27,12 @@ rf_tree = range(rf_model, :n_trees, values = [100, 250, 500, 1000, 2500])
 rf_tm = TunedModel(model = rf_model, 
                    tuning = Grid(resolution = 10), # RandomSearch()
                    resampling = CV(nfolds = 5, rng = 123), 
-                   ranges = [rf_leaf,rf_mtry,rf_tree],
+                   ranges = [rf_leaf, rf_mtry, rf_tree],
                    measure = rms)
 rf_mtm = machine(rf_tm, X, y)
 fit!(rf_mtm, rows = train);
 
 predictions_rf = MLJ.predict(rf_mtm, rows=test);
 root_mean_squared_error(y[test],predictions_rf)
+
+#scatter(y[test],predictions_rf)
