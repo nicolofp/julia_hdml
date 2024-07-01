@@ -23,7 +23,7 @@ describe(DT)
 schema(DT)
 
 train, test = partition(collect(eachindex(DT.sample_id)), 0.8, shuffle=true, rng=438)
-X = DT[:,vcat(2:5,7:664)]
+X = DT[:,vcat(2:5,7:10)]
 y = DT.fev1_post;
 
 # Machine learning pipeline
@@ -63,3 +63,27 @@ predictions_sh = MLJ.predict(lm_lasso, rows=test);
 root_mean_squared_error(y[test],predictions_sh)
 
 #scatter(y[test],predictions_rf)
+
+# Stacking models
+DecisionTreeRegressor = MLJ.@load DecisionTreeRegressor pkg=DecisionTree
+EvoTreeRegressor = MLJ.@load EvoTreeRegressor
+XGBoostRegressor = MLJ.@load XGBoostRegressor
+KNNRegressor = MLJ.@load KNNRegressor pkg=NearestNeighborModels
+LinearRegressor = MLJ.@load LinearRegressor pkg=MLJLinearModels
+
+stack = Stack(;metalearner = LinearRegressor(),
+                resampling = CV(),
+                measures = rmse,
+                constant = ConstantRegressor(),
+                tree_2 = DecisionTreeRegressor(max_depth = 2),
+                tree_3 = DecisionTreeRegressor(max_depth = 3),
+                evo = EvoTreeRegressor(),
+                knn = KNNRegressor(),
+                xgb = XGBoostRegressor())
+stack_pipe = pipe_transformer |> stack
+mach = machine(stack_pipe, X, y)
+fit!(mach, rows = train);
+evaluate!(mach; resampling = CV(nfolds=10, rng=1234), measure = [rsquared, rmse])
+
+tmp = report(mach)
+tmp.deterministic_stack.cv_report
