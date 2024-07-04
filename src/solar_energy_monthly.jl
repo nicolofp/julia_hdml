@@ -20,7 +20,12 @@ DT[:,"h_light"] .= zeros(size(DT,1))
 DT[DT.Radiation .!= 0,:h_light] .= 1.0;
 
 # hours of light
-# 
+scatter(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
+scatter(DT.Radiation, DT.Sunshine)
+cor(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
+cor(DT.Radiation, DT.SystemProduction)
+cor(Matrix(DT[DT.SystemProduction .== 0,2:7]))
+DT[DT.Radiation .<= 10,:]
 
 df = groupby(DT, :date_real)
 dt = combine(df, 
