@@ -1,3 +1,4 @@
+# Load libraries and import  dataset
 using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions
 using StatsBase, HypothesisTests, LinearAlgebra, Random, MLJ, CSV, CategoricalArrays 
 
@@ -5,27 +6,59 @@ DT = CSV.read("C:/Users/nicol/Documents/solar_1/Solar Power Plant Data.csv", Dat
 
 show(describe(DT),allcols = true)
 
+# Set all the negative radiation to zero
 DT[DT.Radiation .< 0,:Radiation] .= 0.0;
 
+# Parse properly all dates and hours
 DT.day = parse.(Int64,chop.(DT[:,"Date-Hour(NMT)"], head = 0, tail = 14))
 DT.month = parse.(Int64,chop.(DT[:,"Date-Hour(NMT)"], head = 3, tail = 11))
 DT.hour = parse.(Int64,chop.(DT[:,"Date-Hour(NMT)"], head = 11, tail = 3));
 
+# Rename column for convenience
 rename!(DT,"Date-Hour(NMT)" => "timedate");
 
+# Create column with right formatting
 DT.timedate_real = DateTime.(2017,DT.month,DT.day,DT.hour);
 DT.date_real = Date.(2017,DT.month,DT.day);
 
+# Create variable "Hours of light"
 DT[:,"h_light"] .= zeros(size(DT,1))
 DT[DT.Radiation .!= 0,:h_light] .= 1.0;
 
+# Analyze why I have zero Radiation but positive energy produced (--> to be investigated)
+# Sunshine = "minutes per hours that sun is not cover by clouds" (scaled 0-60)
+# Consider delay between radiation hit solar panel and start producing energy
+tmp = DT[(DT.Radiation .== 0) .&& (DT.SystemProduction .> 0),:]
+tmp2 = DT[(DT.Sunshine .== 0) .&& (DT.SystemProduction .> 0),:]
+
+
 # hours of light
-scatter(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
+scatter(DT.Sunshine[1:8759], DT.Radiation[2:8760])
 scatter(DT.Radiation, DT.Sunshine)
 cor(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
 cor(DT.Radiation, DT.SystemProduction)
-cor(Matrix(DT[DT.SystemProduction .== 0,2:7]))
+cor(Matrix(DT[DT.SystemProduction .!= 0,2:8]))
 DT[DT.Radiation .<= 10,:]
+
+k = 100
+# train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
+train, test = partition(collect(eachindex(DT[DT.Radiation .>= k,:SystemProduction])), 
+                        0.75, shuffle=true, rng=111);
+#X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
+X = DT[DT.Radiation .>= k,vcat(2:7)];
+y = DT[DT.Radiation .>= k,:SystemProduction];
+
+# First let's try to LM and the crossvalidation
+LinearRegressor = @load LinearRegressor pkg=GLM
+model_glm = LinearRegressor()
+mach_glm = machine(model_glm, X, y) 
+fit!(mach_glm, rows = train)
+fitted_params(mach_glm)
+report(mach_glm)
+
+# Cross-validation
+evaluate!(mach_glm, resampling = CV(nfolds=10, rng=1234), measure = [rmse, rsquared])
+
 
 df = groupby(DT, :date_real)
 dt = combine(df, 
