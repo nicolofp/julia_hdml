@@ -34,11 +34,23 @@ tmp2 = DT[(DT.Sunshine .== 0) .&& (DT.SystemProduction .> 0),:]
 
 # hours of light
 scatter(DT.Sunshine[1:8759], DT.Radiation[2:8760])
-scatter(DT.Radiation, DT.Sunshine)
-cor(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
-cor(DT.Radiation, DT.SystemProduction)
+scatter(DT.Radiation[DT.month .== 3,:], DT.Sunshine[DT.month .== 3,:])
+scatter(DT.Radiation[1:8759], DT.SystemProduction[2:8760])
+scatter(DT.Radiation, DT.SystemProduction)
 cor(Matrix(DT[DT.SystemProduction .!= 0,2:8]))
 DT[DT.Radiation .<= 10,:]
+
+mm = 5
+mmax = 31
+Pl = plot(DT[DT.date_real .== Date.(2017,mm,1),:hour], 
+          DT[DT.date_real .== Date.(2017,mm,1),:SystemProduction],
+          label = :none, lc = :orange)
+for i in 2:mmax
+    Pl = plot!(DT[DT.date_real .== Date.(2017,mm,i),:hour], 
+          DT[DT.date_real .== Date.(2017,mm,i),:SystemProduction],
+          label = :none, lc = :orange)
+end
+Pl
 
 k = 100
 # train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
@@ -63,10 +75,40 @@ evaluate!(mach_glm, resampling = CV(nfolds=10, rng=1234), measure = [rmse, rsqua
 df = groupby(DT, :date_real)
 dt = combine(df, 
              ["SystemProduction","WindSpeed","Sunshine","AirPressure",
-              "Radiation","AirTemperature","RelativeAirHumidity","h_light"] .=> [sum, mean, mean, mean, mean, 
-                                                                                 mean, mean, sum]; 
+              "Radiation","AirTemperature","RelativeAirHumidity","h_light","month"] .=> [sum, mean, mean, mean, mean, 
+                                                                                 mean, mean, sum, mean]; 
     renamecols = true);
 sort!(dt,:date_real);
+
+# Analysis to detect anomalies in 
+# daily production vs daily radiation 
+# --> delete day with Radiation mean > 40 and production sum < 1800
+scatter(dt.Radiation_mean, dt.SystemProduction_sum)
+vline!([40])
+hline!([1800])
+suspect_day = dt[(dt.Radiation_mean .> 40) .&& (dt.SystemProduction_sum .< 1800),:date_real]
+dt.is_suspect = zeros(size(dt,1))
+dt[(dt.Radiation_mean .> 40) .&& (dt.SystemProduction_sum .< 1800),:is_suspect] .= 1.0;
+zero_prod = dt[dt.SystemProduction_sum .== 0,:]
+
+scatter(DT[DT.Radiation .< 200,:Radiation],
+        DT[DT.Radiation .< 200,:SystemProduction])
+
+cor(dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:Radiation_mean],
+    dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:SystemProduction_sum])
+scatter(dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:Radiation_mean],
+        dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:SystemProduction_sum])
+
+scatter(DT[DT.date_real .∉ Ref(suspect_day),:Radiation][1:8135], 
+        DT[DT.date_real .∉ Ref(suspect_day),:SystemProduction][2:8136])
+cor(DT[DT.date_real .∉ Ref(suspect_day),:Radiation][1:8135], 
+    DT[DT.date_real .∉ Ref(suspect_day),:SystemProduction][2:8136])
+
+countmap(DT[DT.date_real .∉ Ref(suspect_day),:month])
+histogram(DT[DT.SystemProduction .> 0,:SystemProduction])
+
+# ExactOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
+# ApproximateOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
 
 p1 = scatter(DT.Radiation, DT.SystemProduction, title = "Solar Radiation (day)", label = :none)
 p2 = scatter(DT.Sunshine, DT.SystemProduction, title="Sunshine (day)", label = :none, mc=:orange)
