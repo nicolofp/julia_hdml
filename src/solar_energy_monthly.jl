@@ -52,26 +52,6 @@ for i in 2:mmax
 end
 Pl
 
-k = 100
-# train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
-train, test = partition(collect(eachindex(DT[DT.Radiation .>= k,:SystemProduction])), 
-                        0.75, shuffle=true, rng=111);
-#X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
-X = DT[DT.Radiation .>= k,vcat(2:7)];
-y = DT[DT.Radiation .>= k,:SystemProduction];
-
-# First let's try to LM and the crossvalidation
-LinearRegressor = @load LinearRegressor pkg=GLM
-model_glm = LinearRegressor()
-mach_glm = machine(model_glm, X, y) 
-fit!(mach_glm, rows = train)
-fitted_params(mach_glm)
-report(mach_glm)
-
-# Cross-validation
-evaluate!(mach_glm, resampling = CV(nfolds=10, rng=1234), measure = [rmse, rsquared])
-
-
 df = groupby(DT, :date_real)
 dt = combine(df, 
              ["SystemProduction","WindSpeed","Sunshine","AirPressure",
@@ -105,7 +85,65 @@ cor(DT[DT.date_real .∉ Ref(suspect_day),:Radiation][1:8135],
     DT[DT.date_real .∉ Ref(suspect_day),:SystemProduction][2:8136])
 
 countmap(DT[DT.date_real .∉ Ref(suspect_day),:month])
-histogram(DT[DT.SystemProduction .> 0,:SystemProduction])
+histogram(DT[DT.SystemProduction .> 10,:SystemProduction])
+
+DT.SystemProduction1 .= zeros(size(DT,1))
+DT.SystemProduction1 .= vcat(DT.SystemProduction[2:8760],0)
+
+k = 0
+# train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
+DT_model = DT[(DT.date_real .∉ Ref(suspect_day)) .&& (DT.SystemProduction .> k),:]
+#train, test = partition(collect(eachindex(DT_model[:,:SystemProduction])), 
+#                        0.80, shuffle=true, rng=90);
+#train, test = partition(1:size(DT_model,1), 
+#                        0.25, rng=90, shuffle = false);
+train, test = (collect(1:821),collect(822:3267));
+#X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
+X = DT_model[:,vcat(2:7,10,11)];
+y = DT_model[:,:SystemProduction];
+
+# First let's try to LM and the crossvalidation
+LinearRegressor = @load LinearRegressor pkg=GLM
+EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees
+pipe_transformer = (X -> coerce!(X, :month=>OrderedFactor, 
+                                    :hour=>OrderedFactor)) |> ContinuousEncoder()
+
+et_regressor = EvoTreeRegressor(nbins = 64, nround = 200, max_depth = 5)
+model_glm = pipe_transformer |> et_regressor
+mach_glm = machine(model_glm, X, y) 
+fit!(mach_glm, rows = train)
+
+# Cross-validation
+evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
+          repeats=5, measure = [rmse, rsquared])
+
+# fitted_params(mach_glm).linear_regressor.coef
+# report(mach_glm)
+# residuals = y[train,:] - (520.21 .+ Matrix(X[train,:]) * fitted_params(mach_glm).linear_regressor.coef)
+# histogram(residuals)
+# scatter(residuals)
+
+# scatter(MLJ.predict(mach_glm, rows=test),
+#         y[test])
+
+DT_model.predicts = zeros(size(DT_model,1))        
+DT_model[test,:predicts] .= MLJ.predict(mach_glm, rows=test)
+histogram(MLJ.predict(mach_glm, rows=test))
+
+df = groupby(DT_model, :date_real)
+dt = combine(df, ["SystemProduction","predicts"] .=> [sum, sum]; renamecols = true);
+sort!(dt,:date_real);
+dt = dt[dt.date_real .> Date.(2017,4,23),:]
+
+q2 = plot(dt[:,:date_real],dt[:,:SystemProduction_sum],  title = "Actual vs Predict", label = ["Actual"])
+q2 = plot!(dt[:,:date_real],dt[:,:predicts_sum], mc = :orange, label = ["Predict"])
+
+mape = 100 * mean(abs.((dt[:,:SystemProduction_sum] - dt[:,:predicts_sum]) ./ dt[:,:SystemProduction_sum])) 
+
+println("RMSE: ", string.(rmse(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
+println("MAE: ", string.(mae(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
+println("R²: ", string.(cor(dt[:,:SystemProduction_sum],dt[:,:predicts_sum]).^2))
+println("MAPE: ", string.(mape))
 
 # ExactOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
 # ApproximateOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
