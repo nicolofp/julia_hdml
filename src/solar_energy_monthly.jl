@@ -90,6 +90,17 @@ histogram(DT[DT.SystemProduction .> 10,:SystemProduction])
 DT.SystemProduction1 .= zeros(size(DT,1))
 DT.SystemProduction1 .= vcat(DT.SystemProduction[2:8760],0)
 
+function cyclical_encoder(df::DataFrame, columns::Union{Array, Symbol}, max_val::Union{Array, Int} )
+    for (column, max) in zip(columns, max_val)        
+        df[:, Symbol(string(column) * "_sin")] = sin.(2*pi*df[:, column]/max)
+        df[:, Symbol(string(column) * "_cos")] = cos.(2*pi*df[:, column]/max)
+    end
+    return df
+end
+
+cyclical_encoder(DT, ["day","month","hour"], [31,12,23])
+
+
 k = 0
 # train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
 DT_model = DT[(DT.date_real .∉ Ref(suspect_day)) .&& (DT.SystemProduction .> k),:]
@@ -97,28 +108,34 @@ DT_model = DT[(DT.date_real .∉ Ref(suspect_day)) .&& (DT.SystemProduction .> k
 #                        0.80, shuffle=true, rng=90);
 #train, test = partition(1:size(DT_model,1), 
 #                        0.25, rng=90, shuffle = false);
-train, test = (collect(1:1067),collect(1068:3267));
+train, test = (collect(1:1564),collect(1565:3267));
 #X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
-X = DT_model[:,vcat(2:7,10,11)];
+X = DT_model[:,vcat(2:7,15:20)];
 y = DT_model[:,:SystemProduction];
 
 # First let's try to LM and the crossvalidation
 LinearRegressor = @load LinearRegressor pkg=GLM
 EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees
+LGBMRegressor = MLJ.@load LGBMRegressor pkg=LightGBM
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 pipe_transformer = (X -> coerce!(X, :month=>OrderedFactor, 
                                     :hour=>OrderedFactor)) |> ContinuousEncoder()
 
 et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200)
-et_bins = range(et_regressor, :nbins, values = [16, 32, 64])
+rf_regressor = RandomForestRegressor(n_trees = 500, n_subfeatures = 3, min_samples_leaf = 10)
+lg_regressor = LGBMRegressor(learning_rate = 0.1, min_data_in_leaf = 10, num_iterations = 150)
+#=et_bins = range(et_regressor, :nbins, values = [16, 32, 64])
 et_nrun = range(et_regressor, :nrounds, values = [100, 250, 500])
 et_deph = range(et_regressor, :max_depth, values = [4, 5, 6])
 et_tm = TunedModel(model = et_regressor, 
                    tuning = Grid(resolution = 10), # RandomSearch()
                    resampling = CV(nfolds = 5, rng = 123), 
                    ranges = [et_bins, et_nrun, et_deph],
-                   measure = [rmse])
+                   measure = [rmse])=#
 
-model_glm = pipe_transformer |> et_regressor
+model_glm = et_regressor
+model_glm = lg_regressor
+model_glm = rf_regressor
 mach_glm = machine(model_glm, X, y) 
 fit!(mach_glm, rows = train)
 
@@ -142,7 +159,7 @@ histogram(MLJ.predict(mach_glm, rows=test))
 df = groupby(DT_model, :date_real)
 dt = combine(df, ["SystemProduction","predicts"] .=> [sum, sum]; renamecols = true);
 sort!(dt,:date_real);
-dt = dt[dt.date_real .> Date.(2017,6,1),:]
+dt = dt[dt.date_real .> Date.(2017,6,30),:]
 
 q2 = plot(dt[:,:date_real],dt[:,:SystemProduction_sum],  title = "Actual vs Predict", label = ["Actual"])
 q2 = plot!(dt[:,:date_real],dt[:,:predicts_sum], mc = :orange, label = ["Predict"])
@@ -154,7 +171,7 @@ println("MAE: ", string.(mae(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
 println("R²: ", string.(cor(dt[:,:SystemProduction_sum],dt[:,:predicts_sum]).^2))
 println("MAPE: ", string.(mape))
 
-histogram(dt[:,:SystemProduction1_sum], bins = 20)
+histogram(dt[:,:SystemProduction_sum], bins = 30)
 
 # ExactOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
 # ApproximateOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
