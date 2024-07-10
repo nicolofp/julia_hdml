@@ -97,7 +97,7 @@ DT_model = DT[(DT.date_real .∉ Ref(suspect_day)) .&& (DT.SystemProduction .> k
 #                        0.80, shuffle=true, rng=90);
 #train, test = partition(1:size(DT_model,1), 
 #                        0.25, rng=90, shuffle = false);
-train, test = (collect(1:821),collect(822:3267));
+train, test = (collect(1:1067),collect(1068:3267));
 #X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
 X = DT_model[:,vcat(2:7,10,11)];
 y = DT_model[:,:SystemProduction];
@@ -108,7 +108,16 @@ EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees
 pipe_transformer = (X -> coerce!(X, :month=>OrderedFactor, 
                                     :hour=>OrderedFactor)) |> ContinuousEncoder()
 
-et_regressor = EvoTreeRegressor(nbins = 64, nround = 200, max_depth = 5)
+et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200)
+et_bins = range(et_regressor, :nbins, values = [16, 32, 64])
+et_nrun = range(et_regressor, :nrounds, values = [100, 250, 500])
+et_deph = range(et_regressor, :max_depth, values = [4, 5, 6])
+et_tm = TunedModel(model = et_regressor, 
+                   tuning = Grid(resolution = 10), # RandomSearch()
+                   resampling = CV(nfolds = 5, rng = 123), 
+                   ranges = [et_bins, et_nrun, et_deph],
+                   measure = [rmse])
+
 model_glm = pipe_transformer |> et_regressor
 mach_glm = machine(model_glm, X, y) 
 fit!(mach_glm, rows = train)
@@ -133,7 +142,7 @@ histogram(MLJ.predict(mach_glm, rows=test))
 df = groupby(DT_model, :date_real)
 dt = combine(df, ["SystemProduction","predicts"] .=> [sum, sum]; renamecols = true);
 sort!(dt,:date_real);
-dt = dt[dt.date_real .> Date.(2017,4,23),:]
+dt = dt[dt.date_real .> Date.(2017,6,1),:]
 
 q2 = plot(dt[:,:date_real],dt[:,:SystemProduction_sum],  title = "Actual vs Predict", label = ["Actual"])
 q2 = plot!(dt[:,:date_real],dt[:,:predicts_sum], mc = :orange, label = ["Predict"])
@@ -144,6 +153,8 @@ println("RMSE: ", string.(rmse(dt[:,:SystemProduction_sum],dt[:,:predicts_sum]))
 println("MAE: ", string.(mae(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
 println("R²: ", string.(cor(dt[:,:SystemProduction_sum],dt[:,:predicts_sum]).^2))
 println("MAPE: ", string.(mape))
+
+histogram(dt[:,:SystemProduction1_sum], bins = 20)
 
 # ExactOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
 # ApproximateOneSampleKSTest(DT[DT.SystemProduction .> 0,:SystemProduction],tmp_dist)
