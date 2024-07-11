@@ -52,7 +52,7 @@ Let's visualize the `SystemProduction` for each hour:
 
 ```{julia}
 plot(DT.timedate_real, DT.SystemProduction, 
-    title="Hourly production", label= :none, size=(750,300))
+    title="Hourly production", label= :none, size=(900,300))
 ```
 
 From the plot we notice that we have some multiple consecutive days where the production is zero (for example in Jan, May, Dec). It seems that instead of `missing` value we have some `zero` value when we don't have available data. We need to be very careful while performing the data cleaning because during the night the actual production of the solar panel is zero. Let's group by day and check the days with zero production  
@@ -76,7 +76,7 @@ p1 = hline!([1800], label= :none)
 p2 = scatter(DT.Radiation, DT.SystemProduction, title = "Production vs Radiation (hour)", 
              label= :none)
 
-plot(p1, p2, layout=(1,2), size=(750,300))
+plot(p1, p2, layout=(1,2), size=(900,300))
 ```
 
 From the plot is clear that we have some outlier where radiation is grater than 40 W/m^2^ and production is lower than 1800 kWh per day. Let's mark those days as *suspicious* and check if we have hour that can have some suspiciuos data, then compute the correlation between variables in the clean dataset
@@ -121,7 +121,7 @@ We need to load the `EvoTreeRegressor` algorithm, set the parameters, create the
 EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees;
 et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200);
 
-model_glm = et_regressor
+model_glm = et_regressor;
 mach_glm = machine(model_glm, X, y); 
 fit!(mach_glm, rows = train);
 
@@ -148,7 +148,7 @@ q1 = scatter(dt[:,:SystemProduction_sum],dt[:,:predicts_sum], title = "Actual vs
 q1 = plot!(collect(0:59000),collect(0:59000), label = :none, mc = :red)
 
 
-plot(q1, q2, layout=(1,2), size=(750,300))
+plot(q1, q2, layout=(1,2), size=(900,300))
 ```
 
 ```{julia}

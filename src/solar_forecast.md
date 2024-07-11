@@ -68,7 +68,7 @@ Let’s visualize the `SystemProduction` for each hour:
 
 ``` julia
 plot(DT.timedate_real, DT.SystemProduction, 
-    title="Hourly production", label= :none, size=(750,300))
+    title="Hourly production", label= :none, size=(900,300))
 ```
 
 ![](solar_forecast_files/figure-commonmark/cell-5-output-1.svg)
@@ -100,7 +100,7 @@ p1 = hline!([1800], label= :none)
 p2 = scatter(DT.Radiation, DT.SystemProduction, title = "Production vs Radiation (hour)", 
              label= :none)
 
-plot(p1, p2, layout=(1,2), size=(750,300))
+plot(p1, p2, layout=(1,2), size=(900,300))
 ```
 
 ![](solar_forecast_files/figure-commonmark/cell-6-output-1.svg)
@@ -177,7 +177,7 @@ the operation for 5 times
 EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees;
 et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200);
 
-model_glm = et_regressor
+model_glm = et_regressor;
 mach_glm = machine(model_glm, X, y); 
 fit!(mach_glm, rows = train);
 
@@ -227,7 +227,7 @@ q1 = scatter(dt[:,:SystemProduction_sum],dt[:,:predicts_sum], title = "Actual vs
 q1 = plot!(collect(0:59000),collect(0:59000), label = :none, mc = :red)
 
 
-plot(q1, q2, layout=(1,2), size=(750,300))
+plot(q1, q2, layout=(1,2), size=(900,300))
 ```
 
 ![](solar_forecast_files/figure-commonmark/cell-11-output-1.svg)
