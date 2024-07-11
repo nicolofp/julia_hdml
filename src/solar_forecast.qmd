@@ -3,8 +3,6 @@ title: "Solar energy forecast"
 format: 
     gfm:
         fontsize: smaller
-        number-sections: true
-        embed-resources: true
 ---
 
 ## Import libraries
