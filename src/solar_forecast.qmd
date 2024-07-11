@@ -6,7 +6,6 @@ format:
         number-sections: true
         embed-resources: true
         df-print: kable
-        output-dir: .\noteboooks  
 ---
 
 ## Import libraries
