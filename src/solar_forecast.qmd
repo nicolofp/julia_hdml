@@ -5,7 +5,6 @@ format:
         fontsize: smaller
         number-sections: true
         embed-resources: true
-        df-print: kable
 ---
 
 ## Import libraries
@@ -102,7 +101,7 @@ function cyclical_encoder(df::DataFrame, columns::Union{Array, Symbol}, max_val:
     return df
 end
 
-cyclical_encoder(DT, ["day","month","hour"], [31,12,23])
+cyclical_encoder(DT, ["day","month","hour"], [31,12,23]);
 ```
 
 ## Machine Learning
@@ -121,12 +120,12 @@ y = DT_model[:,:SystemProduction];
 We need to load the `EvoTreeRegressor` algorithm, set the parameters, create the machine and cross validate the model using 5-folds repeating the operation for 5 times
 
 ```{julia}
-EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees
-et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200)
+EvoTreeRegressor = MLJ.@load EvoTreeRegressor pkg=EvoTrees;
+et_regressor = EvoTreeRegressor(nbins = 32, max_depth = 10, nrounds = 200);
 
 model_glm = et_regressor
-mach_glm = machine(model_glm, X, y) 
-fit!(mach_glm, rows = train)
+mach_glm = machine(model_glm, X, y); 
+fit!(mach_glm, rows = train);
 
 # Cross-validation
 evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
@@ -152,7 +151,9 @@ q1 = plot!(collect(0:59000),collect(0:59000), label = :none, mc = :red)
 
 
 plot(q1, q2, layout=(1,2), size=(750,300))
+```
 
+```{julia}
 println("RMSE: ", string.(rmse(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
 println("MAE: ", string.(mae(dt[:,:SystemProduction_sum],dt[:,:predicts_sum])))
 println("R²: ", string.(cor(dt[:,:SystemProduction_sum],dt[:,:predicts_sum]).^2))

@@ -52,11 +52,17 @@ for i in 2:mmax
 end
 Pl
 
+
+
+
 df = groupby(DT, :date_real)
 dt = combine(df, 
-             ["SystemProduction","WindSpeed","Sunshine","AirPressure",
-              "Radiation","AirTemperature","RelativeAirHumidity","h_light","month"] .=> [sum, mean, mean, mean, mean, 
-                                                                                 mean, mean, sum, mean]; 
+             ["SystemProduction","WindSpeed",
+             "Sunshine","AirPressure",
+              "Radiation","AirTemperature",
+              "RelativeAirHumidity","month"] .=> [sum, mean, mean, 
+                                                            mean, mean, mean, 
+                                                            mean,  mean]; 
     renamecols = true);
 sort!(dt,:date_real);
 
@@ -71,8 +77,17 @@ dt.is_suspect = zeros(size(dt,1))
 dt[(dt.Radiation_mean .> 40) .&& (dt.SystemProduction_sum .< 1800),:is_suspect] .= 1.0;
 zero_prod = dt[dt.SystemProduction_sum .== 0,:]
 
-scatter(DT[DT.Radiation .< 200,:Radiation],
-        DT[DT.Radiation .< 200,:SystemProduction])
+DF = DT[DT.date_real .∉ Ref(suspect_day),:]
+
+
+scatter(DF[(DF.SystemProduction .== 0) .&& (DF.Radiation .> 10),:Radiation],
+        DF[(DF.SystemProduction .== 0) .&& (DF.Radiation .> 10),:SystemProduction])
+        
+scatter(DF[(DF.Radiation .< 40),:Radiation],
+        DF[(DF.Radiation .< 0),:SystemProduction])
+
+filter!([:date_real, :SystemProduction, :Radiation] => (x,y,z) -> x ∉ Ref(suspect_day) && 
+        !(y == 0 && z > 40), DT)
 
 cor(dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:Radiation_mean],
     dt[(dt.Radiation_mean .< 40) .|| (dt.SystemProduction_sum .> 1800),:SystemProduction_sum])
@@ -87,9 +102,6 @@ cor(DT[DT.date_real .∉ Ref(suspect_day),:Radiation][1:8135],
 countmap(DT[DT.date_real .∉ Ref(suspect_day),:month])
 histogram(DT[DT.SystemProduction .> 10,:SystemProduction])
 
-DT.SystemProduction1 .= zeros(size(DT,1))
-DT.SystemProduction1 .= vcat(DT.SystemProduction[2:8760],0)
-
 function cyclical_encoder(df::DataFrame, columns::Union{Array, Symbol}, max_val::Union{Array, Int} )
     for (column, max) in zip(columns, max_val)        
         df[:, Symbol(string(column) * "_sin")] = sin.(2*pi*df[:, column]/max)
@@ -103,14 +115,15 @@ cyclical_encoder(DT, ["day","month","hour"], [31,12,23])
 
 k = 0
 # train, test = partition(collect(eachindex(DT.SystemProduction)), 0.75, shuffle=true, rng=111);
-DT_model = DT[(DT.date_real .∉ Ref(suspect_day)) .&& (DT.SystemProduction .> k),:]
+DT_model = DT[DT.Radiation .> k,:]
 #train, test = partition(collect(eachindex(DT_model[:,:SystemProduction])), 
 #                        0.80, shuffle=true, rng=90);
 #train, test = partition(1:size(DT_model,1), 
 #                        0.25, rng=90, shuffle = false);
-train, test = (collect(1:1564),collect(1565:3267));
+# train, test = (collect(1:1564),collect(1565:3267));
+train, test = (collect(1:1828),collect(1829:3744));
 #X = MLJ.table(Matrix{Float64}(DT[:,2:7]));
-X = DT_model[:,vcat(2:7,15:20)];
+X = DT_model[:,vcat(2:7,14:19)];
 y = DT_model[:,:SystemProduction];
 
 # First let's try to LM and the crossvalidation
