@@ -4,10 +4,9 @@ format:
     gfm:
         fontsize: smaller
         number-sections: true
-        code-fold: true
         embed-resources: true
         df-print: kable
-        output-dir: notebook  
+        output-dir: .\noteboooks  
 ---
 
 ## Import libraries

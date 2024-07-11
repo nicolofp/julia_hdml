@@ -6,15 +6,10 @@ Solar energy forecast
 Import libraries for data cleaning, statistics, machine learning and
 visualization
 
-<details>
-<summary>Code</summary>
-
 ``` julia
 using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions
 using StatsBase, HypothesisTests, LinearAlgebra, Random, MLJ, CSV, CategoricalArrays 
 ```
-
-</details>
 
 ## Dataset
 
@@ -30,15 +25,10 @@ Our data contains information on these key factors:
 - **RelativeAirHumidity**: relative humidity (scaled 0-100)
 - **SystemProduction**: system production kWh
 
-<details>
-<summary>Code</summary>
-
 ``` julia
 DT = CSV.read("C:/Users/nicol/Documents/solar_1/Solar Power Plant Data.csv", DataFrame);
 show(describe(DT),allcols = true)
 ```
-
-</details>
 
     8×7 DataFrame
      Row │ variable             mean     min               median  max               nmissing  eltype   
