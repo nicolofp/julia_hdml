@@ -183,12 +183,12 @@ fit!(mach_glm, rows = train)
 
 # Cross-validation
 evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
-          repeats=5, measure = [rmse, rsquared]);
+          repeats=5, measure = [rmse, rsquared], verbosity=0);
 ```
 
-    import EvoTrees
-
     [ Info: For silent loading, specify `verbosity=0`. 
+
+    import EvoTrees
 
      ✔
 
@@ -208,54 +208,6 @@ evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234),
     │  - tree_type: binary
     │  - rng: MersenneTwister(123)
     └ , …).
-
-    Evaluating over 25 folds:   8%[==>                      ]  ETA: 0:00:45
-
-    Evaluating over 25 folds:  12%[===>                     ]  ETA: 0:00:46
-
-    Evaluating over 25 folds:  16%[====>                    ]  ETA: 0:00:39
-
-    Evaluating over 25 folds:  20%[=====>                   ]  ETA: 0:00:36
-
-    Evaluating over 25 folds:  24%[======>                  ]  ETA: 0:00:33
-
-    Evaluating over 25 folds:  28%[=======>                 ]  ETA: 0:00:30
-
-    Evaluating over 25 folds:  32%[========>                ]  ETA: 0:00:28
-
-    Evaluating over 25 folds:  36%[=========>               ]  ETA: 0:00:26
-
-    Evaluating over 25 folds:  40%[==========>              ]  ETA: 0:00:24
-
-    Evaluating over 25 folds:  44%[===========>             ]  ETA: 0:00:22
-
-    Evaluating over 25 folds:  48%[============>            ]  ETA: 0:00:20
-
-    Evaluating over 25 folds:  52%[=============>           ]  ETA: 0:00:18
-
-    Evaluating over 25 folds:  56%[==============>          ]  ETA: 0:00:17
-
-    Evaluating over 25 folds:  60%[===============>         ]  ETA: 0:00:15
-
-    Evaluating over 25 folds:  64%[================>        ]  ETA: 0:00:14
-
-    Evaluating over 25 folds:  68%[=================>       ]  ETA: 0:00:12
-
-    Evaluating over 25 folds:  72%[==================>      ]  ETA: 0:00:10
-
-    Evaluating over 25 folds:  76%[===================>     ]  ETA: 0:00:09
-
-    Evaluating over 25 folds:  80%[====================>    ]  ETA: 0:00:07
-
-    Evaluating over 25 folds:  84%[=====================>   ]  ETA: 0:00:06
-
-    Evaluating over 25 folds:  88%[======================>  ]  ETA: 0:00:04
-
-    Evaluating over 25 folds:  92%[=======================> ]  ETA: 0:00:03
-
-    Evaluating over 25 folds:  96%[========================>]  ETA: 0:00:01
-
-    Evaluating over 25 folds: 100%[=========================] Time: 0:00:36
 
 ## Results
 

@@ -131,7 +131,7 @@ fit!(mach_glm, rows = train)
 
 # Cross-validation
 evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
-          repeats=5, measure = [rmse, rsquared]);
+          repeats=5, measure = [rmse, rsquared], verbosity=0);
 ```
 
 ## Results
