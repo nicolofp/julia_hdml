@@ -273,3 +273,10 @@ println("RMSE: ", string.(rmse(forecast_day[:,:SystemProduction_sum],forecast_da
 println("MAE: ", string.(mae(forecast_day[:,:SystemProduction_sum],forecast_day[:,:pred_sum])))
 println("R²: ", string.(cor(forecast_day[:,:SystemProduction_sum],forecast_day[:,:pred_sum]).^2))
 println("MAPE: ", string.(mape))
+
+# https://juliaai.github.io/DataScienceTutorials.jl/end-to-end/telco/#saving_our_model
+# https://juliaai.github.io/MLJ.jl/dev/models/EvoTreeRegressor_EvoTrees/#EvoTreeRegressor_EvoTrees
+# https://evovest.github.io/EvoTrees.jl/dev/tutorials/examples-API/
+# https://www.juliabloggers.com/using-evotrees-jl-for-time-series-prediction/
+# https://iqvia-ml.github.io/LightGBM.jl/dev/functions/#LightGBM.LGBMRegression-Tuple{}
+# https://juliaai.github.io/DataScienceTutorials.jl/end-to-end/boston-lgbm/
