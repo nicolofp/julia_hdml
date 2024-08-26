@@ -11,7 +11,7 @@ format:
 Import libraries for data cleaning, statistics, machine learning and visualization
 
 ```{julia}
-using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions
+using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions, ConformalPrediction
 using StatsBase, HypothesisTests, LinearAlgebra, Random, MLJ, CSV, CategoricalArrays 
 ```
 

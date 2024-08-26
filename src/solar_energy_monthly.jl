@@ -1,5 +1,5 @@
 # Load libraries and import  dataset
-using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions
+using Dates, DataFrames, Plots, StatsPlots, Statistics, Distributions, ConformalPrediction
 using StatsBase, HypothesisTests, LinearAlgebra, Random, MLJ, CSV, CategoricalArrays 
 
 DT = CSV.read("C:/Users/nicol/Documents/solar_1/Solar Power Plant Data.csv", DataFrame);
@@ -146,15 +146,52 @@ et_tm = TunedModel(model = et_regressor,
                    ranges = [et_bins, et_nrun, et_deph],
                    measure = [rmse])=#
 
-model_glm = et_regressor
-model_glm = lg_regressor
+conformal_models = merge(values(available_models[:regression])...)
+keys(conformal_models) 
+
+model_glm = conformal_model(et_regressor; coverage=.9)
+model_glm = conformal_model(lg_regressor)
 model_glm = rf_regressor
 mach_glm = machine(model_glm, X, y) 
-fit!(mach_glm, rows = train)
+MLJ.fit!(mach_glm, rows = train)
+
+conf_model = conformal_model(et_regressor; method=:time_series_ensemble_batch, coverage=0.95)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+
+y_pred_interval = MLJ.predict(conf_model, mach.fitresult, X[test,:])
+lb = [ minimum(tuple_data) for tuple_data in y_pred_interval]
+ub = [ maximum(tuple_data) for tuple_data in y_pred_interval]
+y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]
+
+plot(collect(1:1916),y_pred)
+plot!(collect(1:1916),lb)
+plot!(collect(1:1916),ub)
+
+
+DT_cp = hcat(DT_model[test,[:SystemProduction,:date_real]])
+DT_cp.pred = y_pred
+DT_cp.lb = lb
+DT_cp.ub = ub
+
+df = groupby(DT_cp, :date_real)
+dt = combine(df, ["SystemProduction","pred","lb","ub"] .=> [sum, sum, sum, sum]; renamecols = true);
+sort!(dt,:date_real);
+dt = dt[dt.date_real .> Date.(2017,6,30),:]
+q2 = plot(dt[:,:date_real],dt[:,:SystemProduction_sum],  title = "Actual vs Predict", label = ["Actual"])
+q2 = plot!(dt[:,:date_real],dt[:,:pred_sum], mc = :orange, label = ["Predict"])
+q2 = plot!(dt[:,:date_real],dt[:,:lb_sum], mc = :green, label = ["lb"])
+q2 = plot!(dt[:,:date_real],dt[:,:ub_sum], mc = :red, label = ["ub"])
+
+
+
 
 # Cross-validation
 evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
           repeats=5, measure = [rmse, rsquared])
+
+evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234), 
+          repeats=5, measure = [emp_coverage, ssc])
 
 # fitted_params(mach_glm).linear_regressor.coef
 # report(mach_glm)
@@ -165,9 +202,17 @@ evaluate!(mach_glm, resampling = CV(nfolds=5, rng=1234),
 # scatter(MLJ.predict(mach_glm, rows=test),
 #         y[test])
 
+tmp_cp = MLJ.predict(mach_glm, rows=test)
+
+plot(mach_glm.model, mach_glm.fitresult, X, y, zoom = -0.5, title="Tmp")
+
+DataFrame(MLJ.predict(mach_glm, rows=test))
+
 DT_model.predicts = zeros(size(DT_model,1))        
 DT_model[test,:predicts] .= MLJ.predict(mach_glm, rows=test)
 histogram(MLJ.predict(mach_glm, rows=test))
+
+
 
 df = groupby(DT_model, :date_real)
 dt = combine(df, ["SystemProduction","predicts"] .=> [sum, sum]; renamecols = true);
